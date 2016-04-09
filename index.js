@@ -1,20 +1,21 @@
-var hiddenFrames = require("hidden-frame");
-var self = require("self");
-var prefs = require("simple-prefs").prefs;
+var hiddenFrames = require("sdk/frame/hidden-frame");
+var self = require("sdk/self");
+var data = self.data;
+var prefs = require("sdk/simple-prefs").prefs;
 let hiddenFrame, hiddenContentWindow;
 let isEnabled = true;
 (function () {
   let _hiddenFrameOnReady = function() {
     let window = this.element.contentWindow;
-    window.location = self.data.url("playmusic.html");
+    window.location = self.data.url("http://www.orangefreesounds.com/wp-content/uploads/2015/07/Tibetan-song-om-mani-padme-hum.mp3");
   };
   let _hiddenFrame = hiddenFrames.HiddenFrame({ onReady: _hiddenFrameOnReady });
   hiddenFrame = hiddenFrames.add(_hiddenFrame);
 })();
 
-var pageMod = require("page-mod");
-var data = require("self").data;
-var timers = require("timers");
+var pageMod = require("sdk/page-mod");
+var timers = require("sdk/timers");
+var tabs = require("sdk/tabs");
 
 let pagemod;
 (function setPageMod() {
@@ -24,7 +25,17 @@ let pagemod;
     });
 })();
 
-var panel = require("panel").Panel({
+var tabs = require('sdk/tabs');
+var { attach, detach } = require('sdk/content/mod');
+var { Style } = require('sdk/stylesheet/style');
+var style = Style({
+  uri: data.url("styles.css")
+});
+
+for (let tab of tabs)
+  attach(style, tab);
+
+var panel = require("sdk/panel").Panel({
   width: 750,
   height: 563,
   contentURL: data.url("Lasagnes.html")
@@ -42,12 +53,16 @@ let interval;
     interval = timers.setInterval(panelShowAndPlay, 15000);
 })();
 
-var tbb = require("./toolbarbutton").ToolbarButton({
+var buttons = require("sdk/ui/button/action");
+var button = buttons.ActionButton({
   id: "addommmm-toggle",
-  image: data.url("icon.png"),
-  tooltiptext: "Toggle AddOmmm",
-  label: "AddOmmmm",
-  onCommand: function () {
+  label: "Toggle AddOmmmm",
+  icon: {
+    "16": data.url("icon.png"),
+    "32": data.url("icon.png"),
+    "64": data.url("icon.png")
+  },
+  onClick: function() {
     isEnabled = !isEnabled;
     if(isEnabled) {
         hiddenFrames.add(hiddenFrame);
@@ -56,11 +71,15 @@ var tbb = require("./toolbarbutton").ToolbarButton({
             include: "*",
             contentStyleFile: data.url("styles.css"),
         });
+        for (let tab of tabs)
+          attach(style, tab);
     }
     else {
         hiddenFrames.remove(hiddenFrame);
         timers.clearInterval(interval);
         pagemod.destroy();
+        for (let tab of tabs)
+          detach(style, tab);
     };
   }
 });
