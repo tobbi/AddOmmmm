@@ -204,7 +204,7 @@ function onInit()
   browser.runtime.onMessage.addListener(function(m) {
     if(m.reason == "request_state")
     {
-      
+      AddOmmmm.port.postMessage({reason: "state_change", enabled: AddOmmmm.enabled});
     }
   });
   browser.storage.local.get(AddOmmmm.local_storage_key).then(onStorageGot, onStorageError);
