@@ -83,6 +83,12 @@ var AddOmmmm =
 
     // Reset page rotation
     this.port.postMessage({reason: "state_change", enabled: false});
+
+    // Remove lasagna window if existing
+    if(this.created_window != null)
+    {
+      browser.windows.remove(this.created_window.id);
+    }
   },
 
   addAlarms: function()
