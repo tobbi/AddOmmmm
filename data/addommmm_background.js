@@ -1,6 +1,8 @@
 var AddOmmmm =
 {
-
+  /**
+   * Key for localstorage
+   */
   local_storage_key: "addommmm_enabled",
 
  /**
@@ -12,11 +14,6 @@ var AddOmmmm =
   * Window we created that shows the lasagna
   */
   created_window: null,
-
-  /**
-   * Port we need for communication with the content script
-   */
-  port: null,
 
   /**
    * Horse whinny sound
@@ -60,10 +57,20 @@ var AddOmmmm =
     self.horse_sound.setAttribute("src", horse_location);
     document.body.appendChild(self.horse_sound);
 
+    // Add alarms
     this.addAlarms();
 
     // Rotate pages
-    this.port.postMessage({reason: "state_change", enabled: true});
+    browser.tabs.query({}).then(tabs =>
+    {
+      for(var i = 0; i < tabs.length; i++)
+      {
+        browser.tabs.sendMessage(tabs[i].id, {reason: "state_change", enabled: true});
+      }
+    });
+  
+    // Set enabled icon
+    browser.browserAction.setIcon({path: "data/icon.png"});
   },
 
   deinit: function()
@@ -82,13 +89,22 @@ var AddOmmmm =
     browser.alarms.onAlarm.removeListener(AddOmmmm.onAlarmListener);
 
     // Reset page rotation
-    this.port.postMessage({reason: "state_change", enabled: false});
+    browser.tabs.query({}).then(tabs =>
+      {
+        for(var i = 0; i < tabs.length; i++)
+        {
+          browser.tabs.sendMessage(tabs[i].id, {reason: "state_change", enabled: false});
+        }
+    });
 
     // Remove lasagna window if existing
     if(this.created_window != null)
     {
       browser.windows.remove(this.created_window.id);
     }
+
+    // Set disabled icon
+    browser.browserAction.setIcon({path: "data/icon_disabled.png"});
   },
 
   addAlarms: function()
@@ -156,20 +172,7 @@ var AddOmmmm =
     {
       browser.windows.remove(self.created_window.id);
     }
-  },
-
-  notifyTabs: function() {
-    browser.tabs.query().then(function(tabs) {
-      for(tab in tabs)
-      {
-        browser.tabs.connect(
-          tab.id,
-          {name: "tabs-connect-example"}
-        ).postMessage({reason: "state_change", enabled: AddOmmmm.enabled});
-      }
-    });
   }
-
 };
 
 
@@ -204,13 +207,10 @@ function onStorageError()
 
 function onInit()
 {
-  browser.runtime.onConnect.addListener(function(p) {
-    AddOmmmm.port = p;
-  });
-  browser.runtime.onMessage.addListener(function(m) {
+  browser.runtime.onMessage.addListener(function(m, s) {
     if(m.reason == "request_state")
     {
-      AddOmmmm.port.postMessage({reason: "state_change", enabled: AddOmmmm.enabled});
+      browser.tabs.sendMessage(s.tab.id, {reason: "state_change", enabled: AddOmmmm.enabled});
     }
   });
   browser.storage.local.get(AddOmmmm.local_storage_key).then(onStorageGot, onStorageError);
@@ -225,7 +225,13 @@ browser.browserAction.onClicked.addListener((tab) => {
     AddOmmmm.enabled = !prefValue;
     
     // Notify tabs:
-    AddOmmmm.port.postMessage({reason: "state_change", enabled: AddOmmmm.enabled});
+    browser.tabs.query({}).then(tabs =>
+      {
+        for(let tab of tabs)
+        {
+          browser.tabs.sendMessage(tab.id, {reason: "state_change", enabled: !prefValue});
+        }
+      });
 
     if(!prefValue)
     {

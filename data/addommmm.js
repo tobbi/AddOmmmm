@@ -1,10 +1,9 @@
-var myPort = browser.runtime.connect({name:"port-from-cs"});
 var last_transform = document.body.style.transform;
 var last_transform_origin = document.body.style.transformOrigin;
 
 browser.runtime.sendMessage({reason: "request_state"});
 
-myPort.onMessage.addListener(function(m) {
+browser.runtime.onMessage.addListener(function(m) {
   if(m.reason == "state_change")
   {
     if(m.enabled)

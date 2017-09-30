@@ -9,7 +9,8 @@
   "license": "MPL-2.0",
   "homepage_url": "http://www.tobbi.ml",
   "icons": {
-    "48": "data/icon.png"
+    "48": "data/icon.png",
+    "64": "data/icon64.png"
   },
 
   "content_scripts": [
@@ -24,7 +25,7 @@
   "browser_action": {
     "default_icon": {
       "16": "data/icon.png",
-      "32": "data/icon.png"
+      "64": "data/icon64.png"
     }
   },
   "permissions": [
