@@ -223,15 +223,6 @@ browser.browserAction.onClicked.addListener((tab) => {
     var prefValue = setting.addommmm_enabled;
 
     AddOmmmm.enabled = !prefValue;
-    
-    // Notify tabs:
-    browser.tabs.query({}).then(tabs =>
-      {
-        for(let tab of tabs)
-        {
-          browser.tabs.sendMessage(tab.id, {reason: "state_change", enabled: !prefValue});
-        }
-      });
 
     if(!prefValue)
     {
