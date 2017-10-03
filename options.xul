@@ -1,6 +1,0 @@
-<?xml version="1.0" ?>
-<vbox xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <setting data-jetpack-id="jid0-rDCwvHBdPyHNUj99GHl6uIIzMg0@jetpack" pref="extensions.jid0-rDCwvHBdPyHNUj99GHl6uIIzMg0@jetpack.showLasagna" pref-name="showLasagna" title="Show lasagna" type="bool">
-    Show lasagna every 15 seconds?
-  </setting>
-</vbox>

@@ -1,14 +1,24 @@
 var AddOmmmm =
 {
   /**
-   * Key for localstorage
+   * Key for localstorage "enabled" property
    */
-  local_storage_key: "addommmm_enabled",
+  enabled_property_key: "addommmm_enabled",
+
+  /**
+   * Key for localstorage "show lasagna" property
+   */
+  show_lasagna_property_key: "addommmm_lasagna",
 
  /**
   * is AddOmmmmm enabled?
   */
   enabled: true,
+
+  /**
+   * Should we show the lasagna
+   */
+  show_lasagna: true,
 
  /**
   * Window we created that shows the lasagna
@@ -70,7 +80,7 @@ var AddOmmmm =
     });
   
     // Set enabled icon
-    browser.browserAction.setIcon({path: "data/icon.png"});
+    browser.browserAction.setIcon({path: "data/icon16.png"});
   },
 
   deinit: function()
@@ -151,7 +161,7 @@ var AddOmmmm =
     /**
      * Routine that gets called after the lasagna 
      * window has been created successfully.
-     * @param {*} windowInfo The window we created 
+     * @param {*} windowInfo The window we created
      */
     function onCreated(windowInfo) {
       self.created_window = windowInfo;
@@ -160,44 +170,64 @@ var AddOmmmm =
     if(alarm.name === "horse-whinny")
     {
       self.horse_sound.play();
-      browser.windows.create({
-        url: self.lasagna_location,
-        type: "panel",
-        height: 590,
-        width: 750
-      }).then(onCreated, onError);
+
+      if(self.show_lasagna)
+      {
+        browser.windows.create({
+          url: self.lasagna_location,
+          type: "panel",
+          height: 590,
+          width: 750
+        }).then(onCreated, onError);
+      }
     }
 
     if(alarm.name === "close-window" && self.created_window !== null)
     {
       browser.windows.remove(self.created_window.id);
     }
+  },
+
+  onEnabledChanged: function(isEnabled)
+  {
+    if(AddOmmmm.enabled === isEnabled)
+    {
+      return;
+    }
+
+    // Set enabled property here
+    AddOmmmm.enabled = isEnabled;
+    
+    if(isEnabled)
+    {
+      AddOmmmm.init();
+    }
+    else
+    {
+      AddOmmmm.deinit();
+    }
   }
 };
 
-
-function onStorageGot(setting)
+function onEnabledPropGot(setting)
 {
   if(setting.addommmm_enabled === undefined)
   {
     browser.storage.local.set({addommmm_enabled: true});
-    AddOmmmm.enabled = true;
     AddOmmmm.init();
     return;
   }
-  /**
-   * Set property in AddOmmmm object
-   */
-  AddOmmmm.enabled = setting.addommmm_enabled;
+  AddOmmmm.onEnabledChanged(setting.addommmm_enabled);
+}
 
-  if(AddOmmmm.enabled)
+function onShowLasagnaGot(setting)
+{
+  if(setting.addommmm_lasagna === undefined)
   {
-    AddOmmmm.init();
+    browser.storage.local.set({addommmm_lasagna: true});
+    return;
   }
-  else
-  {
-    AddOmmmm.deinit();
-  }
+  AddOmmmm.show_lasagna = setting.addommmm_lasagna;
 }
 
 function onStorageError()
@@ -213,28 +243,29 @@ function onInit()
       browser.tabs.sendMessage(s.tab.id, {reason: "state_change", enabled: AddOmmmm.enabled});
     }
   });
-  browser.storage.local.get(AddOmmmm.local_storage_key).then(onStorageGot, onStorageError);
+  browser.storage.local.get(AddOmmmm.enabled_property_key).then(onEnabledPropGot, onStorageError);
+  browser.storage.local.get(AddOmmmm.show_lasagna_property_key).then(onShowLasagnaGot, onStorageError);
 }
 
 browser.browserAction.onClicked.addListener((tab) => {
   let localStorage = browser.storage.local;
-  localStorage.get(AddOmmmm.local_storage_key).then(function(setting) {
-
-    var prefValue = setting.addommmm_enabled;
-
-    AddOmmmm.enabled = !prefValue;
-
-    if(!prefValue)
-    {
-      // AddOmmmm was previously disabled, enable it:
-      AddOmmmm.init();
-    }
-    else
-    {
-      AddOmmmm.deinit();
-    }
-    localStorage.set({addommmm_enabled : !prefValue});
+  localStorage.get(AddOmmmm.enabled_property_key).then(function(setting) {    
+    localStorage.set({addommmm_enabled : !setting.addommmm_enabled});
   }, onStorageError);
+});
+
+browser.storage.onChanged.addListener(function(changes) {
+  var enabledProp = changes[AddOmmmm.enabled_property_key];
+  if(enabledProp !== undefined)
+  {
+    AddOmmmm.onEnabledChanged(enabledProp.newValue);
+  }
+
+  var showLasagnaProp = changes[AddOmmmm.show_lasagna_property_key];
+  if(showLasagnaProp !== undefined)
+  {
+    AddOmmmm.show_lasagna = showLasagnaProp.newValue;
+  }
 });
 
 onInit();
