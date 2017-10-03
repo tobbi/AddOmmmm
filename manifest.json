@@ -14,6 +14,12 @@
     "64": "data/icon64.png"
   },
 
+  "applications": {
+    "gecko": {
+      "id": "jid0-rDCwvHBdPyHNUj99GHl6uIIzMg0@jetpack"
+    }
+  },
+
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
